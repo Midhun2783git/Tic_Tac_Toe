@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * MIDHUN SAMINATHAN
+ * H00383233
  * A Value Iteration Agent, only very partially implemented. The methods to implement are: 
  * (1) {@link ValueIterationAgent#iterate}
  * (2) {@link ValueIterationAgent#extractPolicy}
@@ -17,8 +19,9 @@ import java.util.Map;
 public class ValueIterationAgent extends Agent {
 
 	/**
-	 * This map is used to store the values of states
+	 * This map is used to store the values of states	 * 
 	 */
+	
 	Map<Game, Double> valueFunction=new HashMap<Game, Double>();
 	
 	/**
