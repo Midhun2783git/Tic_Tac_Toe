@@ -114,9 +114,38 @@ public class PolicyIterationAgent extends Agent {
 		/*
 		 * YOUR CODE HERE
 		 */
+	    for (Game state : curPolicy.keySet()) {   // Iterate through all states
+	        if (!state.isTerminal()) {    // if not a terminal state
+	            List<Move> posMvs = state.getPossibleMoves();  // retrieve all moves from state 
+	            if (!posMvs.isEmpty()) {  //if move not empty
+	                int randomIndex = (int) (Math.random() * posMvs.size());  //Retrieve random move from index
+	                Move randomMove = posMvs.get(randomIndex);
+	                curPolicy.put(state, randomMove); // Assign the randomly chosen move to the state
+	            }
+	        }
+	    }
 	}
 	
+	private double calcVal(List<TransitionProb> tr) {
+		double val = 0.0;
+		
+		for(TransitionProb t : tr) {
+			val += t.prob * (t.outcome.localReward +(discount * policyValues.get(t.outcome.sPrime))); 
+		}
+		return val;
+	}
 	
+	private double calcStVal(Game state) {
+	    double stVal = 0.0;
+
+	    Move poMove = curPolicy.get(state);
+	    for (TransitionProb tr : mdp.generateTransitions(state, poMove)) {
+	        double tVal = tr.prob * (tr.outcome.localReward + discount * policyValues.getOrDefault(tr.outcome.sPrime, 0.0));
+	        stVal += tVal;
+	    }
+
+	    return stVal;
+	}
 	/**
 	 * Performs policy evaluation steps until the maximum change in values is less than {@code delta}, in other words
 	 * until the values under the currrent policy converge. After running this method, 
@@ -128,12 +157,27 @@ public class PolicyIterationAgent extends Agent {
 	protected void evaluatePolicy(double delta)
 	{
 		/* YOUR CODE HERE */
-		
-		
+		boolean cVal = false; //initializing convergence value to false
+		while (!cVal) { // evaluating until convergence 
+		    double max = 0.0; //initializing maximum value 
+		    for (Game st : curPolicy.keySet()) {  // iterating through states of current policy 
+		        if (!st.isTerminal()) {   // if not a terminal state
+		            double prevVal = policyValues.getOrDefault(st, 0.0);	//Retrieving previous value of state	   
+		            double val = calcStVal(st);  //Calculating value of state
+		            policyValues.put(st, val);	// Updating policy with state and values 	           
+		            double eVal = Math.abs(val - prevVal); //calculating the evaluated value by subtracting the value from previous value
+		            if (eVal > max) { //Updating the maximum value if evaluated value is greater 
+		                max = eVal;
+		            }
+		        }
+		    }
+		    if (max <= delta) { //if maximum value is less than or equal to delta 
+		        cVal = true;  	// updating convergence as true
+		    }
+		}
 	}
 		
-	
-	
+		
 	/**This method should be run AFTER the {@link PolicyIterationAgent#evaluatePolicy} train method to improve the current policy according to 
 	 * {@link PolicyIterationAgent#policyValues}. You will need to do a single step of expectimax from each game (state) key in {@link PolicyIterationAgent#curPolicy} 
 	 * to look for a move/action that potentially improves the current policy. 
@@ -143,9 +187,36 @@ public class PolicyIterationAgent extends Agent {
 	protected boolean improvePolicy()
 	{
 		/* YOUR CODE HERE */
+		boolean impPolicy = false;  // initializing the policy to be improved to false 
+		double max = 0.0 ; //initializing the maximum value and the value to be calculated to 0
+		double val = 0.0 ; 
 		
-		return false;
+		for (Game st : policyValues.keySet()) // iterating through the game states in policy values
+		{
+			if(st.isTerminal())  //if state is terminal state 
+				continue;
+			else
+				max = Double.NEGATIVE_INFINITY;  // updating maximum value for non-terminal states 
+			
+			List<Move> pMoves = st.getPossibleMoves(); //assign the possible moves of state to variable 
+			
+			for(Move mv : pMoves) //iterate through moves
+			{
+				val = 0; // resetting value for each move 
+				List<TransitionProb> tr = mdp.generateTransitions(st, mv);  // Retrieving transition probabilities 
+				val += calcVal(tr); //Calculating the value 
+				if (val > max) //if value greater than maximum value 
+				{
+					max = val; //updating  maximum value as calculated value 
+					curPolicy.put(st, mv); // populating current policy with state and move 
+					impPolicy = true; //Updating the policy to be improved as true
+				}
+			}
+		}
+		return impPolicy; // return the policy improved.
 	}
+	
+	
 	
 	/**
 	 * The (convergence) delta
@@ -160,8 +231,19 @@ public class PolicyIterationAgent extends Agent {
 	public void train()
 	{
 		/* YOUR CODE HERE */
+		initValues();		// Initialing state values
+		initRandomPolicy(); // Initializing random policy 
 		
-		
+		do {				//iterating till convergence 
+			evaluatePolicy(delta);  //Initializing the evaluate policy			
+			HashMap<Game, Move> p = new HashMap<>(this.curPolicy);// Retrieving the current policy 
+			improvePolicy();   // improving the policy
+			if(curPolicy.equals(p) || !improvePolicy()) // if convergence or policy not improved break.
+				break;
+			
+		}while(true); //iterate until until condition fails  
+		policy = new Policy(); // Initializing new policy 
+		policy.policy = curPolicy; // updating current policy as new policy 
 		
 	}
 	

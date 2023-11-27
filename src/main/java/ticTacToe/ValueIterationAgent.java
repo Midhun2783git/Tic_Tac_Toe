@@ -1,13 +1,15 @@
 package ticTacToe;
 
+/**
+ * MIDHUN SAMINATHAN
+ * H00383233
+ */
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * MIDHUN SAMINATHAN
- * H00383233
  * A Value Iteration Agent, only very partially implemented. The methods to implement are: 
  * (1) {@link ValueIterationAgent#iterate}
  * (2) {@link ValueIterationAgent#extractPolicy}
@@ -19,9 +21,8 @@ import java.util.Map;
 public class ValueIterationAgent extends Agent {
 
 	/**
-	 * This map is used to store the values of states	 * 
-	 */
-	
+	 * This map is used to store the values of states * 
+	 */	
 	Map<Game, Double> valueFunction=new HashMap<Game, Double>();
 	
 	/**
@@ -94,9 +95,16 @@ public class ValueIterationAgent extends Agent {
 		mdp=new TTTMDP(winReward, loseReward, livingReward, drawReward);
 	}
 	
-	/**
-	 
-	
+	private double calcVal(List<TransitionProb> tr) {
+		double val = 0.0;
+		
+		for (TransitionProb t : tr) {
+			val = t.prob * (t.outcome.localReward + (discount * valueFunction.get(t.outcome.sPrime)));
+		}
+		return val; 
+		
+	}
+ 
 	/*
 	 * Performs {@link #k} value iteration steps. After running this method, the {@link ValueIterationAgent#valueFunction} map should contain
 	 * the (current) values of each reachable state. You should use the {@link TTTMDP} provided to do this.
@@ -105,10 +113,36 @@ public class ValueIterationAgent extends Agent {
 	 */
 	public void iterate()
 	{
-		/* YOUR CODE HERE
-		 */
+		HashMap<Game, Move> nPol = new HashMap<Game, Move>();
+		
+		for (int k = 1; k < this.k; k++) { //  iterating through values
+			for (Game st : valueFunction.keySet()) { // iterating through each each game state
+				double maxVal = Double.NEGATIVE_INFINITY; // initializing the maximum value
+				Move bMov = null; // initializing the best action
+				for (Game ST : st.getAllSuccessorGames()) { // for each successor state
+				List<Move> m = st.getPossibleMoves(); // Assigning possible moves from state to a variable in list 
+				for (Move posMov : m) {  // iterating through list for move 
+				if (st.isLegal(posMov)) {  //if move is valid
+					double val = 0;
+					for (TransitionProb tr : this.mdp.generateTransitions(st, posMov)) {  
+						val += tr.prob * (tr.outcome.localReward + discount  // calculating value iteration
+								* valueFunction.get(tr.outcome.sPrime ));
+					}
+					if (val > maxVal) {  // if the value greater than maximum value 
+						maxVal = val;   // updating maximum value as calculated value 
+						bMov = posMov;  // updating the current move as best move
+					}
+					
+				}
+				valueFunction.put(st, maxVal);
+				nPol.put(st, bMov); // populating policy with state and best move.
+				}
+				
+				}	
+			}
+		policy = new Policy(nPol); //generating policy for value iteration
+		}
 	}
-	
 	/**This method should be run AFTER the train method to extract a policy according to {@link ValueIterationAgent#valueFunction}
 	 * You will need to do a single step of expectimax from each game (state) key in {@link ValueIterationAgent#valueFunction} 
 	 * to extract a policy.
@@ -120,7 +154,7 @@ public class ValueIterationAgent extends Agent {
 		/*
 		 * YOUR CODE HERE
 		 */
-		return null;
+		return policy;
 	}
 	
 	/**

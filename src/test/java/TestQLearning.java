@@ -23,7 +23,7 @@ public class TestQLearning {
 	public void testAggressive() {
 		System.out.println("Against Aggressive Agent:");
 		
-		int[] results=TestPolicyIterationAgent.playAgainstEachOther(new QLearningAgent(), new AggressiveAgent(), 50);
+		int[] results=TestPolicyIterationAgent.playAgainstEachOther(new QLearningAgent(), new AggressiveAgent(),50);
 		System.out.println("Wins: " + results[0] + " Losses: " + results[1] + " Draws: " + results[2]);
 		assertEquals(0, results[1]);
 		
