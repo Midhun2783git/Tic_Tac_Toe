@@ -31,7 +31,7 @@ public class QLearningAgent extends Agent {
 	/**
 	 * The number of episodes to train for
 	 */
-	int numEpisodes=1000;
+	int numEpisodes=10000;
 	
 	/**
 	 * The discount factor (gamma)
